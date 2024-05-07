@@ -1,84 +1,98 @@
 #!/usr/bin/env node
 
-'use strict';
+const fs = require('fs');
+const path = require('path');
+const { mkdirp } = require('mkdirp');
+const request = require('request');
+const tar = require('tar');
+const extractZip = require('extract-zip');
+const { rimraf } = require('rimraf');
+const https = require('https');
+const http = require('http');
 
-var fs      = require('fs');
-var path    = require('path');
-var mkdirp  = require('mkdirp');
-var request = require('request');
-var tar     = require('tar');
-var extractZip = require('extract-zip');
-var rimraf = require("rimraf");
 
-var TARBALL_URLS = {
-    'linux': {
-        'ia32': "https://download.cdn.yandex.net/mystem/mystem-3.0-linux3.5-32bit.tar.gz",
-        'x64': "http://download.cdn.yandex.net/mystem/mystem-3.1-linux-64bit.tar.gz",
-    },
-    'darwin': {
-        'x64': "http://download.cdn.yandex.net/mystem/mystem-3.1-macosx.tar.gz"
-    },
-    'win32': {
-        'ia32': "https://download.cdn.yandex.net/mystem/mystem-3.0-win7-32bit.zip",
-        'x64': "http://download.cdn.yandex.net/mystem/mystem-3.1-win-64bit.zip",
-    },
-    'freebsd': {
-        'x64': "https://download.cdn.yandex.net/mystem/mystem-3.0-freebsd9.0-64bit.tar.gz",
-    }
+const TARBALL_URLS = {
+  linux: {
+    ia32: 'https://download.cdn.yandex.net/mystem/mystem-3.0-linux3.5-32bit.tar.gz',
+    x64:  'http://download.cdn.yandex.net/mystem/mystem-3.1-linux-64bit.tar.gz',
+  },
+  darwin: {
+    x64: 'http://download.cdn.yandex.net/mystem/mystem-3.1-macosx.tar.gz',
+  },
+  win32: {
+    ia32: 'https://download.cdn.yandex.net/mystem/mystem-3.0-win7-32bit.zip',
+    x64: 'http://download.cdn.yandex.net/mystem/mystem-3.1-win-64bit.zip',
+  },
+  freebsd: {
+    x64: 'https://download.cdn.yandex.net/mystem/mystem-3.0-freebsd9.0-64bit.tar.gz',
+  },
 };
 
-main();
+async function downloadFile(url, dest) {
+  console.log('Downloading %s', url);
 
-function main() {
-    var targetDir  = path.join(__dirname, '..', 'vendor', process.platform);
-    var tmpFile    = path.join(targetDir, 'mystem.tar.gz');
-    var url        = TARBALL_URLS[process.platform][process.arch];
-    var isZip      = url.match(/\.zip$/);
+  const protocol = url.startsWith('https') ? https : http;
+  const ws = fs.createWriteStream(dest);
 
-    console.log('Cleanup targetDir [%s]', targetDir);
-    rimraf.sync(targetDir);
+  await new Promise((resolve, reject) => {
+    protocol.get(url, (res) => {
+      if ([301, 302].includes(res.statusCode)) {
+        return downloadFile(res.headers.location, dest)
+          .then(resolve)
+          .catch(reject);
+      }
+      if (res.statusCode !== 200) {
+        return reject(`http(s) error: code ${res.statusCode}`);
+      }
 
-    mkdirp(targetDir, function(err){
-        if (err) throw err;
-
-        downloadFile(url, tmpFile, function(err) {
-            if (err) throw err;
-
-            extractFile(isZip, tmpFile, targetDir, function(err) {
-                if (err) throw err;
-
-                console.log('Unlink', tmpFile);
-
-                fs.unlink(tmpFile, function(err) {
-                    if (err) throw err;
-                    console.log(`$tmpFile was deleted`);
-                });
-            });
-        });
-    });
-}
-
-function downloadFile(url, dest, cb) {
-    console.log('Downloading %s', url);
-    var file = fs.createWriteStream(dest);
-
-    var req = request.get(url);
-    req.pipe(file).on('error', function(err) { // Handle errors
+      res.pipe(ws);
+      res.on('error', (...e) => {
+        console.log('request error', e);
         fs.unlink(dest); // Delete the file async. (But we don't check the result)
-        if (cb) cb(err.message);
+        reject();
+      });
+
+      ws.on('finish', () => {
+        ws.close();
+        console.log('downloaded');
+        resolve();
+      });
     });
-
-    file.on('finish', function() {
-        file.close(cb);  // close() is async, call cb after close completes.
-    });
-};
-
-function extractFile(isZip, src, dest, cb) {
-    console.log('Extracting %s to %s', src, dest);
-
-    if (isZip) {
-        extractZip(src, {dir: dest}, cb);
-    } else {
-        tar.extract({ file: src,  cwd: dest }, null, cb);
-    }
+  });
 }
+
+async function extractFile(isZip, src, dest) {
+  console.log('Extracting %s to %s', src, dest);
+
+  if (isZip) {
+    await extractZip(src, { dir: dest });
+  } else {
+    await tar.extract({ file: src,  cwd: dest }, null);
+  }
+}
+
+async function main() {
+  const targetDir = path.join(__dirname, '..', 'vendor', process.platform);
+  const tmpFile = path.join(targetDir, 'mystem.tar.gz');
+  const url = TARBALL_URLS[process.platform][process.arch];
+  const isZip = url.match(/\.zip$/);
+
+  console.log('Cleanup targetDir [%s]', targetDir);
+  await rimraf.sync(targetDir);
+
+  await mkdirp(targetDir);
+
+  await downloadFile(url, tmpFile);
+
+  await extractFile(isZip, tmpFile, targetDir);
+
+  console.log('Unlink', tmpFile);
+  await fs.promises.unlink(tmpFile).catch((e) => err(e));
+  console.log(`$tmpFile was deleted`);
+}
+
+main().catch((e) => {
+  console.log(e);
+
+  process.exit(1);
+});

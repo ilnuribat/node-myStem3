@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/koorchik/node-mystem3.svg)](https://travis-ci.org/koorchik/node-mystem3)
 
 MyStem
 ------
@@ -58,4 +57,5 @@ Returns promise with array of lemmatized version for passed word and all grammem
 ## CONTRIBUTORS
 
 @bulgakovk
+@ilnuribat
 

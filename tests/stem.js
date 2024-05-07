@@ -1,79 +1,64 @@
-var assert = require('chai').assert;
+const { assert } = require('chai');
+const MyStem = require('../lib/MyStem');
 
-var MyStem = require('../lib/MyStem');
+test('Lemmatize known word', async () => {
+  const myStem = new MyStem();
+  myStem.start();
 
-test('Lemmatize known word', function(done) {
-    var myStem = new MyStem();
-    myStem.start();
+  const lemma = await myStem.lemmatize('немцы');
 
-    myStem.lemmatize("немцы").then(function(lemma) {
-        assert.equal( lemma, "немец");
-    }).then(function() {
-        myStem.stop();
-        done();
-    });
+  assert.equal(lemma, 'немец');
+  myStem.stop();
 });
 
+test('Lemmatize unknown word', async () => {
+  const myStem = new MyStem();
+  myStem.start();
 
-test('Lemmatize unknown word', function(done) {
-    var myStem = new MyStem();
-    myStem.start();
+  const lemma = await myStem.lemmatize('кркркрк');
 
-    myStem.lemmatize("кркркрк").then(function(lemma) {
-        assert.equal( lemma, "кркркрк");
-    }).then(function() {
-        myStem.stop();
-        done();
-    });
+  assert.equal(lemma, 'кркркрк');
+  myStem.stop();
 });
 
-test('Lemmatize non word', function(done) {
-    var myStem = new MyStem();
-    myStem.start();
+test('Lemmatize non word', async () => {
+  const myStem = new MyStem();
+  myStem.start();
 
-    myStem.lemmatize("123яблоко").then(function(lemma) {
-        assert.equal( lemma, "123яблоко");
-    }).then(function() {
-        myStem.stop();
-        done();
-    });
+  const lemma = await myStem.lemmatize('123яблоко');
+
+  assert.equal(lemma, '123яблоко');
+  myStem.stop();
 });
 
-test('Extract all grammemes known word', function(done) {
-    var myStem = new MyStem();
-    myStem.start();
+test('Extract all grammemes known word', async () => {
+  const myStem = new MyStem();
+  myStem.start();
 
-    myStem.extractAllGrammemes("немцы").then(function(grammemes) {
-        /*
-        Существительное, мужской род, одушевлённое, именительный падеж, множественное число
-         */
-        assert.deepEqual( grammemes, ['немец', 'S', 'm', 'anim=nom', 'pl' ]);
-    }).then(function() {
-        myStem.stop();
-        done();
-    });
+  const grammemes = await myStem.extractAllGrammemes('немцы');
+  /*
+  Существительное, мужской род, одушевлённое, именительный падеж, множественное число
+   */
+  assert.deepEqual(grammemes, ['немец', 'S', 'm', 'anim=nom', 'pl']);
+  myStem.stop();
 });
 
-test('Extract all grammemes non word', function(done) {
-    var myStem = new MyStem();
-    myStem.start();
+test('Extract all grammemes non word', async () => {
+  const myStem = new MyStem();
+  myStem.start();
 
-    myStem.extractAllGrammemes("шоп78шол").then(function(grammemes) {
-        assert.equal( grammemes, "шоп78шол");
-    }).then(function() {
-        myStem.stop();
-        done();
-    });
+  const grammemes = await myStem.extractAllGrammemes('шоп78шол');
+
+  assert.equal(grammemes, 'шоп78шол');
+  myStem.stop();
 });
 
-test('Extract all grammemes unknown word', function(done) {
-    var myStem = new MyStem();
-    myStem.start();
+test('Extract all grammemes unknown word', async () => {
+  const myStem = new MyStem();
+  myStem.start();
 
-    myStem.extractAllGrammemes("хелоу").then(function(grammemes) {
-        assert.deepEqual( grammemes, [ 'хелоу', 'S', 'persn', 'm', 'anim=abl', 'pl' ]);
-    }).then(function() {
-        myStem.stop();
-        done();
-    });
+  const grammemes = await myStem.extractAllGrammemes('хелоу');
+
+  assert.deepEqual(grammemes, ['хелоу', 'S', 'persn', 'm', 'anim=abl', 'pl']);
+  myStem.stop();
 });
