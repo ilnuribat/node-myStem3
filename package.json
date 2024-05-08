@@ -1,6 +1,6 @@
 {
   "name": "mystem3-promise",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Fork of koorchik/node-mystem3 project. NodeJS wrapper for the Yandex MyStem 3",
   "main": "lib/MyStem.js",
   "scripts": {

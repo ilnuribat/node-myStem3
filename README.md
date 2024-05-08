@@ -17,11 +17,11 @@ const MyStem = require('mystem3-promise');
 const myStem = new MyStem();
 myStem.start(); // Run mystem in separate process
 
-myStem.lemmatize("немцы")
-  .then(function(lemma) {
+myStem.lemmatize('немцы')
+  .then((lemma) => {
     console.log(lemma);
   })
-  .then(function() {
+  .then(() => {
     myStem.stop(); // Or you can write process.exit();
   })
   .catch(console.error);
