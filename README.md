@@ -12,7 +12,7 @@ This allows to avoid process start overhead.
 
 ```javascript
 
-const MyStem = require('mystem3');
+const MyStem = require('mystem3-promise');
 
 const myStem = new MyStem();
 myStem.start(); // Run mystem in separate process
