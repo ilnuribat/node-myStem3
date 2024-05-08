@@ -62,3 +62,25 @@ test('Extract all grammemes unknown word', async () => {
   assert.deepEqual(grammemes, ['хелоу', 'S', 'persn', 'm', 'anim=abl', 'pl']);
   myStem.stop();
 });
+
+test('Extract the full analysis for a known word', async () => {
+  const myStem = new MyStem();
+  myStem.start();
+
+  const analysis = await myStem.analyze('немцы');
+
+  assert.deepEqual(analysis, { text: 'немцы', analysis: [{ lex: 'немец', gr: 'S,m,anim=nom,pl' }] });
+
+  myStem.stop();
+});
+
+test('Extract the full analysis for a non-word', async () => {
+  const myStem = new MyStem();
+  myStem.start();
+
+  const analysis = await myStem.analyze('шоп78шол');
+
+  assert.deepEqual(analysis, 'шоп78шол');
+
+  myStem.stop();
+});

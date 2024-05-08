@@ -1,5 +1,5 @@
 
-MyStem
+MyStem-promise
 ------
 
 This module contains a wrapper for an excellent morphological analyzer for Russian language Yandex Mystem 3.1 (3.0 for 32bit architectures). A morphological analyzer can perform lemmatization of text and derive a set of morphological attributes for each token.
@@ -12,16 +12,19 @@ This allows to avoid process start overhead.
 
 ```javascript
 
-var MyStem = require('mystem3');
+const MyStem = require('mystem3');
 
-var myStem = new MyStem();
+const myStem = new MyStem();
 myStem.start(); // Run mystem in separate process
 
-myStem.lemmatize("немцы").then(function(lemma) {
+myStem.lemmatize("немцы")
+  .then(function(lemma) {
     console.log(lemma);
-}).then(function() {
+  })
+  .then(function() {
     myStem.stop(); // Or you can write process.exit();
-}).catch(console.error);
+  })
+  .catch(console.error);
 
 ```
 

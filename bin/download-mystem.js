@@ -3,18 +3,16 @@
 const fs = require('fs');
 const path = require('path');
 const { mkdirp } = require('mkdirp');
-const request = require('request');
 const tar = require('tar');
 const extractZip = require('extract-zip');
 const { rimraf } = require('rimraf');
 const https = require('https');
 const http = require('http');
 
-
 const TARBALL_URLS = {
   linux: {
     ia32: 'https://download.cdn.yandex.net/mystem/mystem-3.0-linux3.5-32bit.tar.gz',
-    x64:  'http://download.cdn.yandex.net/mystem/mystem-3.1-linux-64bit.tar.gz',
+    x64: 'http://download.cdn.yandex.net/mystem/mystem-3.1-linux-64bit.tar.gz',
   },
   darwin: {
     x64: 'http://download.cdn.yandex.net/mystem/mystem-3.1-macosx.tar.gz',
@@ -35,29 +33,36 @@ async function downloadFile(url, dest) {
   const ws = fs.createWriteStream(dest);
 
   await new Promise((resolve, reject) => {
-    protocol.get(url, (res) => {
-      if ([301, 302].includes(res.statusCode)) {
-        return downloadFile(res.headers.location, dest)
-          .then(resolve)
-          .catch(reject);
-      }
-      if (res.statusCode !== 200) {
-        return reject(`http(s) error: code ${res.statusCode}`);
-      }
+    protocol
+      .get(url, (res) => {
+        if ([301, 302].includes(res.statusCode)) {
+          return downloadFile(res.headers.location, dest)
+            .then(resolve)
+            .catch(reject);
+        }
+        if (res.statusCode !== 200) {
+          console.log(res);
+          throw new Error(`http(s) error: code ${res.statusCode}`);
+        }
 
-      res.pipe(ws);
-      res.on('error', (...e) => {
-        console.log('request error', e);
-        fs.unlink(dest); // Delete the file async. (But we don't check the result)
-        reject();
-      });
+        res.pipe(ws);
+        res.on('error', (e) => {
+          console.log('here was error', e);
+          fs.unlink(dest); // Delete the file async. (But we don't check the result)
+          reject(e);
+        });
 
-      ws.on('finish', () => {
-        ws.close();
-        console.log('downloaded');
-        resolve();
+        ws.on('finish', () => {
+          ws.close();
+          resolve();
+        });
+
+        return null;
+      })
+      .on('error', (e) => {
+        console.log('error in req', e.code, e.message);
+        reject(e);
       });
-    });
   });
 }
 
@@ -67,7 +72,7 @@ async function extractFile(isZip, src, dest) {
   if (isZip) {
     await extractZip(src, { dir: dest });
   } else {
-    await tar.extract({ file: src,  cwd: dest }, null);
+    await tar.extract({ file: src, cwd: dest }, null);
   }
 }
 
@@ -87,12 +92,12 @@ async function main() {
   await extractFile(isZip, tmpFile, targetDir);
 
   console.log('Unlink', tmpFile);
-  await fs.promises.unlink(tmpFile).catch((e) => err(e));
-  console.log(`$tmpFile was deleted`);
+  await fs.promises.unlink(tmpFile);
+  console.log(`${tmpFile} was deleted`);
 }
 
 main().catch((e) => {
-  console.log(e);
+  console.log('throw main', e.code, e.message);
 
   process.exit(1);
 });

@@ -1,19 +1,15 @@
-'use strict';
+const MyStem = require('../lib/MyStem');
 
-var MyStem = require('../lib/MyStem');
-var Promise = require('bluebird');
-
-var myStem = new MyStem();
+const myStem = new MyStem();
 
 myStem.start();
 
-var words = ['карусели', 'немцы', 'печалька'];
+const words = ['карусели', 'немцы', 'печалька'];
 
-var promises = words.map(function(word) {
-    return myStem.lemmatize(word)
-});
+const promises = words.map((word) => myStem.lemmatize(word));
 
-Promise.all(promises).then(function(lemmas) {
+Promise.all(promises)
+  .then((lemmas) => {
     console.log(lemmas);
     myStem.stop();
-});
+  });

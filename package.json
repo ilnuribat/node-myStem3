@@ -1,5 +1,5 @@
 {
-  "name": "mystem3",
+  "name": "mystem3-promise",
   "version": "1.3.1",
   "description": "Fork of koorchik/node-mystem3 project. NodeJS wrapper for the Yandex MyStem 3",
   "main": "lib/MyStem.js",
@@ -29,11 +29,9 @@
   },
   "homepage": "https://github.com/ilnuribat/node-mystem3",
   "dependencies": {
-    "bluebird": "^3.5.4",
     "extract-zip": "^2.0.1",
     "mkdirp": "^3.0.1",
     "path": "^0.12.7",
-    "request": "^2.55.0",
     "rimraf": "^5.0.5",
     "tar": "^4.4.8"
   },
