@@ -1,6 +1,6 @@
 {
   "name": "mystem3-promise",
-  "version": "1.4.3",
+  "version": "1.5.0",
   "description": "Fork of koorchik/node-mystem3 project. NodeJS wrapper for the Yandex MyStem 3",
   "main": "lib/MyStem.js",
   "types": "lib/index.d.ts",
@@ -20,7 +20,7 @@
     "lemmatization"
   ],
   "author": "koorchik",
-  "contributes": [{
+  "contributors": [{
     "url": "https://github.com/ilnuribat",
     "name": "Ilnur Ibatullin"
   }],
